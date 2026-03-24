@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import FormInput from "@/components/FormInput";
 import FormButton from "@/components/FormButton";
+import { supabase } from "@/lib/supabase";
 
 const Cadastro = () => {
   const navigate = useNavigate();
@@ -9,18 +10,17 @@ const Cadastro = () => {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
-  
-  // Estados para mensagens de erro
+
   const [nomeError, setNomeError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [senhaError, setSenhaError] = useState("");
   const [confirmarSenhaError, setConfirmarSenhaError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erroGeral, setErroGeral] = useState("");
 
-  // Validação do formulário
   const validateForm = () => {
     let isValid = true;
-    
-    // Validação do nome
+
     if (!nome.trim()) {
       setNomeError("Nome é obrigatório");
       isValid = false;
@@ -30,8 +30,7 @@ const Cadastro = () => {
     } else {
       setNomeError("");
     }
-    
-    // Validação do email
+
     if (!email.trim()) {
       setEmailError("Email é obrigatório");
       isValid = false;
@@ -41,8 +40,7 @@ const Cadastro = () => {
     } else {
       setEmailError("");
     }
-    
-    // Validação da senha
+
     if (!senha.trim()) {
       setSenhaError("Senha é obrigatória");
       isValid = false;
@@ -52,8 +50,7 @@ const Cadastro = () => {
     } else {
       setSenhaError("");
     }
-    
-    // Validação da confirmação de senha
+
     if (!confirmarSenha.trim()) {
       setConfirmarSenhaError("Confirme sua senha");
       isValid = false;
@@ -63,34 +60,52 @@ const Cadastro = () => {
     } else {
       setConfirmarSenhaError("");
     }
-    
+
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      // Aqui você pode adicionar a lógica de cadastro (API)
-      console.log("Cadastro realizado:", { nome, email, senha });
-      
-      // Redireciona para o login após cadastro
-      navigate("/login");
+    setErroGeral("");
+
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: {
+            nome,
+          },
+        },
+      });
+
+      if (error) {
+        setErroGeral(error.message);
+        return;
+      }
+
+      navigate("/");
+    } catch {
+      setErroGeral("Erro inesperado ao cadastrar.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page-enter flex min-h-screen flex-col items-center justify-center px-4">
-      {/* Logo Responsiva */}
       <div className="mb-6 w-full sm:mb-8">
-        <img 
-          src="/MajorControl.png" 
-          alt="Major Control Logo" 
+        <img
+          src="/MajorControl.png"
+          alt="Major Control Logo"
           className="mx-auto h-28 w-auto object-contain sm:h-32 md:h-36 lg:h-40"
         />
       </div>
 
-      {/* Card */}
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-background p-5 shadow-lg sm:max-w-md sm:p-6 md:max-w-lg md:p-8 -mt-8 sm:-mt-10"
@@ -104,7 +119,10 @@ const Cadastro = () => {
           </p>
         </div>
 
-        {/* Campo Nome */}
+        {erroGeral && (
+          <p className="text-sm text-center text-red-500">{erroGeral}</p>
+        )}
+
         <div>
           <FormInput
             id="nome"
@@ -116,12 +134,9 @@ const Cadastro = () => {
               if (nomeError) setNomeError("");
             }}
           />
-          {nomeError && (
-            <p className="mt-1 text-xs text-red-500">{nomeError}</p>
-          )}
+          {nomeError && <p className="mt-1 text-xs text-red-500">{nomeError}</p>}
         </div>
 
-        {/* Campo Email */}
         <div>
           <FormInput
             id="email"
@@ -134,12 +149,9 @@ const Cadastro = () => {
               if (emailError) setEmailError("");
             }}
           />
-          {emailError && (
-            <p className="mt-1 text-xs text-red-500">{emailError}</p>
-          )}
+          {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
         </div>
 
-        {/* Campo Senha */}
         <div>
           <FormInput
             id="senha"
@@ -152,12 +164,9 @@ const Cadastro = () => {
               if (senhaError) setSenhaError("");
             }}
           />
-          {senhaError && (
-            <p className="mt-1 text-xs text-red-500">{senhaError}</p>
-          )}
+          {senhaError && <p className="mt-1 text-xs text-red-500">{senhaError}</p>}
         </div>
 
-        {/* Campo Confirmar Senha */}
         <div>
           <FormInput
             id="confirmarSenha"
@@ -175,12 +184,14 @@ const Cadastro = () => {
           )}
         </div>
 
-        <FormButton type="submit">Cadastrar</FormButton>
+        <FormButton type="submit">
+          {loading ? "Cadastrando..." : "Cadastrar"}
+        </FormButton>
 
         <p className="text-center text-xs text-muted-foreground sm:text-sm">
           Já tem conta?{" "}
           <Link
-            to="/login"
+            to="/"
             className="font-medium text-foreground underline underline-offset-2 transition-opacity duration-150 hover:opacity-70"
           >
             Fazer login

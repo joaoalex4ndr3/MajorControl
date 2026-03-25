@@ -1,6 +1,8 @@
 // pages/Home.tsx
 import { useState, useRef } from "react";
 import Header from "@/components/Header";
+import TabelaEstoque from "@/components/TabelaEstoque";
+import { supabase } from "@/lib/supabase";
 
 const mockUser = {
   email: "usuario@exemplo.com",
@@ -27,11 +29,13 @@ const Home = () => {
     <div className="page-enter flex min-h-screen flex-col">
       <Header onVerConta={() => setShowAccountCard(true)} />
 
-      <main className="flex flex-1 items-center justify-center px-4">
-        <p className="text-sm text-muted-foreground">
-          Sistema pronto para expansão.
-        </p>
-      </main>
+      <main className="flex flex-1 flex-col px-4 py-4">
+  <h1 className="mb-4 text-lg font-semibold text-center">
+    Controle de Estoque
+  </h1>
+
+  <TabelaEstoque />
+</main>
 
       {showAccountCard && (
         <div

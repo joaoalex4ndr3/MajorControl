@@ -1,9 +1,13 @@
 // components/Header.tsx
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+
+
 
 interface HeaderProps {
   onVerConta?: () => void; // opcional, para funcionar em outras páginas sem erro
 }
+
 
 const HomeIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -12,9 +16,16 @@ const HomeIcon = () => (
   </svg>
 );
 
+
+
 const Header = ({ onVerConta }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleLogout = async () => {
+  await supabase.auth.signOut();
+  navigate("/");
+}
 
   return (
     <header className="w-full border-b border-border bg-background">
@@ -38,10 +49,10 @@ const Header = ({ onVerConta }: HeaderProps) => {
         <div className="flex items-center gap-2">
           {location.pathname !== "/login" && (
             <button
-              onClick={() => navigate("/login")}
+              onClick={handleLogout}
               className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-all duration-150 hover:bg-muted active:scale-[0.97] sm:text-sm"
             >
-              Voltar ao Login
+              Sair da conta
             </button>
           )}
 

@@ -1,28 +1,48 @@
 // pages/Home.tsx
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import TabelaEstoque from "@/components/TabelaEstoque";
 import { supabase } from "@/lib/supabase";
 
-const mockUser = {
-  email: "usuario@exemplo.com",
-  senha: "123456",
-};
-
 const Home = () => {
+  const navigate = useNavigate();
   const [showAccountCard, setShowAccountCard] = useState(false);
-  const [foto, setFoto] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
-  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Erro ao buscar usuário:", error);
+        setUserEmail("Erro ao carregar");
+      } else if (user?.email) {
+        setUserEmail(user.email);
+      } else {
+        setUserEmail("Usuário não encontrado");
+      }
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleForgotPassword = async () => {
+    if (!userEmail || userEmail === "Erro ao carregar") return;
+    const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      alert("Erro ao enviar e-mail de redefinição: " + error.message);
+    } else {
+      alert("E-mail de redefinição de senha enviado! Verifique sua caixa de entrada.");
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
   };
 
   return (
@@ -30,12 +50,8 @@ const Home = () => {
       <Header onVerConta={() => setShowAccountCard(true)} />
 
       <main className="flex flex-1 flex-col px-4 py-4">
-  <h1 className="mb-4 text-lg font-semibold text-center">
-    Controle de Estoque
-  </h1>
-
-  <TabelaEstoque />
-</main>
+        <TabelaEstoque />
+      </main>
 
       {showAccountCard && (
         <div
@@ -56,62 +72,46 @@ const Home = () => {
               </button>
             </div>
 
-            <div className="mb-6 flex flex-col items-center">
-              <div className="relative mb-2 h-24 w-24 overflow-hidden rounded-full border border-gray-200 bg-gray-50">
-                {foto ? (
-                  <img src={foto} alt="Perfil" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-black">
-                    {/* Ícone de câmera em preto e branco (SVG) */}
-                    <svg
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="2" y="6" width="20" height="14" rx="2" />
-                      <circle cx="12" cy="13" r="4" />
-                      <line x1="18" y1="8" x2="18.01" y2="8" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFotoChange}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-2 rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50"
-              >
-                Adicionar foto
-              </button>
-            </div>
-
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500">Email</label>
-                <p className="mt-1 rounded bg-gray-50 p-2 text-sm font-mono">{mockUser.email}</p>
+                <p className="mt-1 rounded bg-gray-50 p-2 text-sm font-mono">
+                  {loading ? "Carregando..." : userEmail}
+                </p>
               </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-500">Senha</label>
-                <p className="mt-1 rounded bg-gray-50 p-2 text-sm font-mono">{mockUser.senha}</p>
+                <div className="mt-1 flex items-center justify-between rounded bg-gray-50 p-2">
+                  <span className="text-sm font-mono">••••••••</span>
+                  <button
+                    onClick={handleForgotPassword}
+                    className="text-sm font-medium text-black transition-colors hover:text-gray-600 focus:outline-none"
+                  >
+                    Alterar
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-400">
+                  Clique em "Alterar" para redefinir sua senha via e‑mail.
+                </p>
               </div>
             </div>
 
-            <button
-              onClick={() => setShowAccountCard(false)}
-              className="mt-6 w-full rounded-md bg-black py-2 text-sm font-medium text-white transition hover:bg-white hover:text-black hover:border-black border border-transparent"
-            >
-              Fechar
-            </button>
+            {/* Ambos os botões brancos com borda preta e hover preto */}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => setShowAccountCard(false)}
+                className="w-full rounded-md border border-black bg-white py-2 text-sm font-medium text-black transition-all duration-300 hover:bg-black hover:text-white"
+              >
+                Fechar
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full rounded-md border border-black bg-white py-2 text-sm font-medium text-black transition-all duration-300 hover:bg-black hover:text-white"
+              >
+                Sair da conta
+              </button>
+            </div>
           </div>
         </div>
       )}

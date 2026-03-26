@@ -41,6 +41,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("CLICOU NO LOGIN"); 
     setErroGeral("");
 
     if (!validateForm()) return;
@@ -53,14 +54,21 @@ const Login = () => {
         password: senha,
       });
 
-console.log("LOGIN:", data, error);
+console.log("DATA:", data);
+console.log("SESSION:", data?.session);
+console.log("USER:", data?.user);
+console.log("ERROR:", error);
 
 if (error) {
   setErroGeral(error.message);
   return;
 }
 
-      navigate("/home");
+if (data.session) {
+  navigate("/home");
+}
+
+      
     } catch {
       setErroGeral("Erro inesperado ao fazer login.");
     } finally {

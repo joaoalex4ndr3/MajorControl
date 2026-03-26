@@ -5,11 +5,24 @@ import Header from "@/components/Header";
 import TabelaEstoque from "@/components/TabelaEstoque";
 import { supabase } from "@/lib/supabase";
 
+<<<<<<< HEAD
 const Home = () => {
   const navigate = useNavigate();
   const [showAccountCard, setShowAccountCard] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
   const [loading, setLoading] = useState(true);
+=======
+const mockUser = {
+  email: "usuario@exemplo.com",
+  senha: "123456",
+};
+
+
+const Home = () => {
+  const [showAccountCard, setShowAccountCard ] = useState(false);
+  const [foto, setFoto] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+>>>>>>> 4acd4359b8eef03c2eb5d02acf432be3642d8dc6
 
   useEffect(() => {
     const fetchUser = async () => {

@@ -9,8 +9,9 @@ const mockUser = {
   senha: "123456",
 };
 
+
 const Home = () => {
-  const [showAccountCard, setShowAccountCard] = useState(false);
+  const [showAccountCard, setShowAccountCard ] = useState(false);
   const [foto, setFoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
